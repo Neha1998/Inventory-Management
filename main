@@ -1,0 +1,168 @@
+
+
+class Item(object):
+
+    items_dict = {}
+
+    def __init__(self, price, category, brand):
+        self.price = price
+        self.category = category
+        self.brand = brand
+        self.items_dict.update({f"{brand}_{category}": self})
+
+    def update(self, price=None, category=None, brand=None):
+        if price:
+            self.price = price
+        if category:
+            self.category = category
+        if brand:
+            self.brand = brand
+
+
+class Inventory(object):
+
+    items = {}
+
+    def ___init__(self):
+        pass
+
+    @classmethod
+    def add_to_inventory(cls, item: Item, quantity):
+        total_item_count = sum(cls.items.values())
+        if total_item_count + quantity > 1000:
+            return "Error"
+        if item in cls.items:
+            cls.items[item] += quantity
+        else:
+            cls.items.update({item: quantity})
+
+    @classmethod
+    def add_to_cart(cls, item: Item, quantity):
+        present = cls.items.get(item, 0)
+        if quantity > present:
+            return False
+        cls.items.update({Item: present-quantity})
+        return True
+
+    @classmethod
+    def search(cls, price_range=None, brands=None, categories=None):
+        res = []
+        for item in cls.items.keys():
+            price_range = price_range or [item.price]
+            brands = brands or [item.brand]
+            categories = categories or [item.category]
+            if item.price in price_range and item.brand in brands and item.category in categories:
+                res.append(item)
+        return res
+
+    @classmethod
+    def sort(cls, comparator, reverse=False):
+        pass
+
+    def __str__(self):
+        res = "Inventory : \n"
+        for item, quantity in self.items:
+            res += f"{item.brand} -> {item.category} -> {quantity}\n"
+        return res
+
+
+class Cart(object):
+
+    def __init__(self):
+        self.items = {}
+        self.total_price = ""
+
+    def add_to_cart(self, item, quantity):
+        if item in self.items:
+            qty = self.items[item][0] + quantity
+            price = self.items[item][1] + item.price
+            self.items[item] = (qty, price)
+        else:
+            self.items.update({item: (quantity, item.price)})
+
+    def __str__(self):
+        res = ""
+        for item, value in self.items.items():
+            res += f"{item.brand} -> {item.category} -> {value[0]} -> Total Price -> {value[1]} \n"
+        return res
+
+
+class User(object):
+
+    users_dict = {}
+
+    def __init__(self, name, address, wallet):
+        self.name = name
+        self.address= address
+        self.wallet = wallet
+        self.cart = Cart()
+        self.users_dict.update({name: self})
+
+    def add_to_cart(self, item, quantity):
+        status = Inventory.add_to_cart(item, quantity)
+        if not status:
+            print("Failed, not in stock")
+            return
+        if self.wallet >= item.price:
+            self.wallet -= item.price
+        else:
+            print("Failed, Add money to wallet.")
+            return
+        self.cart.add_to_cart(item, quantity)
+
+
+def AddItem(brand, category, price):
+    Item(price, category, brand)
+
+
+def AddInventory(brand, category, quantity):
+    Inventory.add_to_inventory(Item.items_dict[f"{brand}_{category}"], quantity)
+
+
+def AddUser(name, address, wallet):
+    User(name, address, wallet)
+
+
+def AddToCart(username, category, brand, quantity):
+    user = User.users_dict[username]
+    user.add_to_cart(Item.items_dict[brand+"_"+category], quantity)
+
+
+def UpdateItem(brand, category, price):
+    item = Item.items_dict[brand+"_"+category]
+    item.price = price
+
+
+def GetCart(username):
+    user = User.users_dict[username]
+    cart = user.cart
+    print(cart)
+
+
+if __name__ == "__main__":
+    AddItem('Amul', 'Milk', 100)
+    AddItem('Amul', 'Curd', 50)
+    AddItem('Nestle', 'Milk', 60)
+    AddItem('Nestle', 'Curd', 90)
+
+    AddInventory('Amul', 'Milk', 10)
+    AddInventory('Nestle', 'Milk', 5)
+    AddInventory('Nestle', 'Curd', 10)
+    AddInventory('Amul', 'Milk', 10)
+    AddInventory('Amul', 'Curd', 5)
+
+    AddUser('Johny', 'CartoonNetowrk', 600)
+    AddUser('Naruto', 'Anime', 500)
+    AddUser('Goku', 'Anime', 3000)
+
+    AddToCart('Johny', 'Milk', 'Nestle', 5)
+    AddToCart('Naruto', 'Milk', 'Nestle', 12)
+    UpdateItem("Nestle", "Milk", 5)
+    AddToCart('Goku', 'Milk', 'Nestle', 10)
+
+    GetCart('Goku')
+    # Nestle -> Milk -> 10 --> Total Price : 50
+    GetCart('Johny')
+    # Nestle -> Milk -> 5 --> Total Price : 60
+
+
